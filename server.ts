@@ -26,9 +26,7 @@ async function loadFonts() {
     
     // Helper to get font URL from Google Fonts CSS
     const getFontUrl = async (family: string, italic = false, weight = 400) => {
-      const cssRes = await fetch(`https://fonts.googleapis.com/css2?family=${family.replace(/ /g, '+')}:ital,wght@${italic?'1':'0'},${weight}&display=swap`, {
-        headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36' }
-      });
+      const cssRes = await fetch(`https://fonts.googleapis.com/css2?family=${family.replace(/ /g, '+')}:ital,wght@${italic?'1':'0'},${weight}&display=swap`);
       const css = await cssRes.text();
       const match = css.match(/url\((https:\/\/[^)]+)\)/);
       return match ? match[1] : null;
@@ -50,7 +48,7 @@ async function loadFonts() {
 loadFonts();
 
 // API Routes
-app.get('/api/og/:f/:g/:c/:t/:u/:j', async (req, res) => {
+app.get('/api/og/:f/:g/:c/:t/:u/:j/image.png', async (req, res) => {
   try {
     const { f, g, c, t, u, j } = req.params;
     const juries = j ? j.split('_') : [];
@@ -212,7 +210,9 @@ async function startServer() {
 
   app.use('*', async (req, res, next) => {
     const url = req.originalUrl;
-    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    const host = req.get('host') || '';
+    const protocol = host.includes('localhost') ? 'http' : 'https';
+    const baseUrl = `${protocol}://${host}`;
     
     try {
       let template;
@@ -232,7 +232,7 @@ async function startServer() {
       if (awardMatch) {
         const [_, f, g, c, t, u, j] = awardMatch;
         const shareUrl = `${baseUrl}/award/${f}/${g}/${c}/${t}/${u}/${j}`;
-        const imageUrl = `${baseUrl}/api/og/${f}/${g}/${c}/${t}/${u}/${j}`;
+        const imageUrl = `${baseUrl}/api/og/${f}/${g}/${c}/${t}/${u}/${j}/image.png`;
         ogTags = `
           <meta property="og:title" content="Ganhámos um prémio no Ouro de Tolo! 🏆" />
           <meta property="og:description" content="Mais um galardão para a estante. Clica para ver os detalhes desta conquista incrível." />
