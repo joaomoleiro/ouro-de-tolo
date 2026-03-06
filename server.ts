@@ -19,30 +19,14 @@ app.use(express.json({ limit: '10mb' }));
 let fonts: any = {};
 async function loadFonts() {
   try {
-    const fetchFont = async (url: string) => {
-      const res = await fetch(url);
-      return await res.arrayBuffer();
-    };
-    
-    // Helper to get font URL from Google Fonts CSS
-    const getFontUrl = async (family: string, italic = false, weight = 400) => {
-      const cssRes = await fetch(`https://fonts.googleapis.com/css2?family=${family.replace(/ /g, '+')}:ital,wght@${italic?'1':'0'},${weight}&display=swap`);
-      const css = await cssRes.text();
-      const match = css.match(/url\((https:\/\/[^)]+)\)/);
-      return match ? match[1] : null;
-    };
-
-    const playfairUrl = await getFontUrl('Playfair Display', true, 900);
-    const loraUrl = await getFontUrl('Lora', false, 400);
-    const loraItalicUrl = await getFontUrl('Lora', true, 400);
-
-    if (playfairUrl) fonts.playfair = await fetchFont(playfairUrl);
-    if (loraUrl) fonts.lora = await fetchFont(loraUrl);
-    if (loraItalicUrl) fonts.loraItalic = await fetchFont(loraItalicUrl);
+    const fontsDir = path.resolve(__dirname, 'public/fonts');
+    fonts.playfair = fs.readFileSync(path.join(fontsDir, 'PlayfairDisplay-BlackItalic.ttf'));
+    fonts.lora = fs.readFileSync(path.join(fontsDir, 'Lora-Regular.ttf'));
+    fonts.loraItalic = fs.readFileSync(path.join(fontsDir, 'Lora-Italic.ttf'));
     
     console.log("Fonts loaded successfully for OG image generation");
   } catch (e) {
-    console.error("Failed to load fonts", e);
+    console.error("Failed to load fonts from filesystem", e);
   }
 }
 loadFonts();
@@ -189,9 +173,9 @@ app.get('/api/og/:f/:g/:c/:t/:u/:j/image.png', async (req, res) => {
       'Cache-Control': 'public, max-age=31536000'
     });
     res.end(pngBuffer);
-  } catch (e) {
+  } catch (e: any) {
     console.error(e);
-    res.status(500).send('Error generating image');
+    res.status(500).send('Error generating image: ' + e.message);
   }
 });
 
